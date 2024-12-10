@@ -97,6 +97,9 @@ Client::Client()
     system("clear");
     while (1)
     {
+        cout << "========================================\n";
+        cout << "      Welcome to the Exam Center\n";
+        cout << "========================================\n";
         cout << "Are you a student or a teacher?(S for Student, T for Teacher) \n";
         cin >> userType;
         if(validUsertype(userType))
@@ -108,7 +111,12 @@ Client::Client()
             cout<<"\nInvalid input :( . Enter again..\n\n";
         }
     }
-    cout << "Enter your choice:\n 1) Register\n 2) Login\n 3) Exit\n";
+    cout << "========================================\n";
+    cout << "Enter your choice:\n";
+    cout << " 1) Register\n";
+    cout << " 2) Login\n";
+    cout << " 3) Exit\n";
+    cout << "========================================\n";
     cin >> choice;
     switch (choice)
     {
@@ -129,7 +137,7 @@ Client::Client()
     case 3:
     {
         // Close the connection
-        cout << "Exiting!!" << endl;
+        cout << "Exiting!! :-(" << endl;
         close(this->client_socket);
         exit(0);
     }
@@ -183,7 +191,9 @@ void Client::registeruser(char &usertype)
 
     if (code == 200)
     {
+        cout << "========================================\n";
         cout << "Welcome, " << clientInfo->username << ", to Exam center!!\n";
+        cout << "========================================\n";
 
         if (usertype == 'S')
         {
@@ -243,7 +253,9 @@ void Client::login(char &usertype)
 
         if (code == SUCCESSFUL_CODE)
         {
+            cout << "========================================\n";
             cout << "Welcome to Exam center!!\n";
+            cout << "========================================\n";
             string department = parseDepartment(userInfo->id);
             if (usertype == 'S')
             {
@@ -278,7 +290,11 @@ void Student::user_specific_functions(int client_socket)
     {
         int code;
         int ch;
-        cout << " 1) start exam \n 2) see leaderboard \n 3) exit \n";
+        cout << "========================================\n";
+        cout << " 1) Start Exam\n";
+        cout << " 2) See Leaderboard\n";
+        cout << " 3) Exit\n";
+        cout << "========================================\n";
         cin >> ch;
         bool endflag = false;
         switch (ch)
@@ -389,7 +405,12 @@ void Teacher::user_specific_functions(int client_socket)
         bool endmenu = false;
         int code;
         int ch;
-        cout << " 1) set exam questions\n 2) see leaderboard \n 3) see question \n 4) exit\n";
+        cout << "========================================\n";
+        cout << " 1) Set Exam Questions\n";
+        cout << " 2) See Leaderboard\n";
+        cout << " 3) See Questions\n";
+        cout << " 6) Exit\n";
+        cout << "========================================\n";
         cin >> ch;
         switch (ch)
         {
