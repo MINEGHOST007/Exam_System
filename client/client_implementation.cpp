@@ -4,12 +4,67 @@
 // inet_addr
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <map>
+#include <iomanip>
+#include <vector>
+#include <algorithm>
 
 // For threading, link with lpthread
 #include <pthread.h>
 #include <semaphore.h>
 #define PORT 8080
 using namespace std;
+
+
+struct StudentPerformance {
+    string id;
+    map<string, double> topicAccuracies;
+};
+
+void displayPerformanceChart(const map<string, StudentPerformance>& studentData) {
+    // Terminal width settings
+    const int nameWidth = 15;
+    const int barWidth = 40;
+    
+    // Print header
+    cout << "\n============= Student Topic Performance =============\n\n";
+    
+    // For each student
+    for (const auto& [studentId, performance] : studentData) {
+        cout << "\nStudent ID: " << studentId << "\n";
+        cout << string(50, '-') << "\n";
+        
+        // Calculate max accuracy for scaling
+        double maxAccuracy = 0;
+        for (const auto& [topic, accuracy] : performance.topicAccuracies) {
+            maxAccuracy = max(maxAccuracy, accuracy);
+        }
+        
+        // Display each topic performance
+        for (const auto& [topic, accuracy] : performance.topicAccuracies) {
+            // Topic name
+            cout << left << setw(nameWidth) << topic.substr(0, nameWidth-1) << " | ";
+            
+            // Calculate bar length
+            int numBars = (int)((accuracy / 100.0) * barWidth);
+            
+            // Draw bar using standard ASCII
+            string bar = string(numBars, '#') + string(barWidth - numBars, '.');
+            
+            // Add color based on performance (optional)
+            cout << bar << " | " << fixed << setprecision(1) << accuracy << "%";
+            
+            // Add a simple indicator
+            if (accuracy == 100.0) cout << " ★";
+            else if (accuracy >= 75.0) cout << " ✓";
+            
+            cout << "\n";
+        }
+        cout << "\n";
+    }
+    cout << "================================================\n\n";
+}
+
 
 bool validUsertype(char &userType)
 {
@@ -367,7 +422,7 @@ void Student::user_specific_functions(int client_socket)
                 {
                     leaderboardInfo *leaderboard = new leaderboardInfo;
                     recv(client_socket, leaderboard, sizeof(*leaderboard), 0);
-                    cout << "Roll: " << leaderboard->id << "Marks: " << leaderboard->marks << endl;
+                    cout << "Roll: " << leaderboard->id << " Marks: " << leaderboard->marks << endl;
                 }
                 else if(code == END_OF_LEADERBOARD_CODE)
                 {
@@ -409,7 +464,8 @@ void Teacher::user_specific_functions(int client_socket)
         cout << " 1) Set Exam Questions\n";
         cout << " 2) See Leaderboard\n";
         cout << " 3) See Questions\n";
-        cout << " 6) Exit\n";
+        cout << " 4) See Topic Leaderboard\n";
+        cout << " 5) Exit\n";
         cout << "========================================\n";
         cin >> ch;
         switch (ch)
@@ -450,6 +506,7 @@ void Teacher::user_specific_functions(int client_socket)
 
                     }
                     cin.getline(question->marks,10);
+                    cin.getline(question->tags,100);
                     send(client_socket, question, sizeof(*question), 0);
                 }
                 else
@@ -478,7 +535,7 @@ void Teacher::user_specific_functions(int client_socket)
                 {
                     leaderboardInfo *leaderboard = new leaderboardInfo;
                     recv(client_socket, leaderboard, sizeof(*leaderboard), 0);
-                    cout << "Roll: " << leaderboard->id << "Marks: " << leaderboard->marks << endl;
+                    cout << "Roll: " << leaderboard->id << " Marks: " << leaderboard->marks << endl;
                 }
                 else
                 {
@@ -511,6 +568,7 @@ void Teacher::user_specific_functions(int client_socket)
                     cout << "d: " << question->opt4 << endl;
                     cout << "Correct Option: " << question->answer << endl;
                     cout << "Marks: " << question->marks << endl;
+                    cout << "Topic : "<< question->tags << endl; 
                     i++;
                 }
                 else if(code == END_QUESTION_SEEING_CODE)
@@ -527,6 +585,46 @@ void Teacher::user_specific_functions(int client_socket)
             break;
         }
         case 4:
+        {
+            int code = TOPIC_LEADERBOARD_CODE;
+            send(client_socket, &code, sizeof(code), 0);
+            char dept[10];
+            cout << "\nEnter which department leaderboard you want to see (department in abbreviated form)\n";
+            cin >> dept;
+            send(client_socket, &dept, sizeof(dept), 0);
+            
+            // Map to store student data: student_id -> StudentPerformance
+            map<string, StudentPerformance> studentData;
+            
+            while (1) {
+                recv(client_socket, &code, sizeof(code), 0);
+                if (code == TOPIC_LEADERBOARD_CODE) {
+                    topicleaderboardInfo *leaderboard = new topicleaderboardInfo;
+                    recv(client_socket, leaderboard, sizeof(*leaderboard), 0);
+                    
+                    // Convert accuracy string to double
+                    double accuracy = stod(leaderboard->count);
+                    
+                    // Store data in the map
+                    studentData[leaderboard->id].id = leaderboard->id;
+                    studentData[leaderboard->id].topicAccuracies[leaderboard->topic_name] = accuracy;
+                    
+                    delete leaderboard;
+                }
+                else if (code == END_TOPIC_LEADERBOARD_CODE || code == SERVER_ERROR_CODE) {
+                    break;
+                }
+            }
+            
+            // Display the performance chart
+            if (!studentData.empty()) {
+                displayPerformanceChart(studentData);
+            } else {
+                cout << "\nNo performance data available.\n";
+            }
+            break;
+        }
+        case 5:
         {
             endmenu = true;
             break;

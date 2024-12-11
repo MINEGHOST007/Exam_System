@@ -19,6 +19,8 @@ sem_t *readFileSemaphore;
 sem_t *queFileSemaphores[4];
 sem_t *resultFileSemaphores[4];
 sem_t *readResultFile;
+sem_t *topicresultFileSemaphores[4];
+sem_t *topicreadResultFile;
 
 map<string,int>deptIndex ;
 void initializeDeptIndex()
@@ -104,18 +106,41 @@ void *clientConnection(void *param)
 		case START_EXAM_CODE:
 		{
 			char dept[10];
-			recv(newSocket, &dept,sizeof(dept),0);
+			recv(newSocket, &dept, sizeof(dept), 0);
 			int index = deptIndex[dept];
 			char id[100];
-			recv(newSocket,&id,sizeof(id),0);
+			recv(newSocket, &id, sizeof(id), 0);
 			deptQuestionBank[index].shuffleQuestions();
-			int marksObtained = deptQuestionBank[index].startExam(newSocket);
-			if(marksObtained == -1){
+
+			ResultData examResult = deptQuestionBank[index].startExam(newSocket);
+			cout<<"Marks obtained: "<<examResult.marksObtained<<endl;
+			if(examResult.marksObtained == -1)
+			{
 				break;
 			}
 			sem_wait(resultFileSemaphores[index]);
-			updateResult(id,dept,marksObtained);
+			updateResult(id, dept, examResult.marksObtained);
 			sem_post(resultFileSemaphores[index]);
+			cout << "Before sem_wait" << endl;
+			if (topicresultFileSemaphores[index] == SEM_FAILED) {
+				cout << "Invalid semaphore at index " << index << endl;
+				break;
+			}
+			if (sem_wait(topicresultFileSemaphores[index]) == -1) {
+				perror("sem_wait failed for topicresultFileSemaphores");
+				break;
+			}
+			cout << "After sem_wait" << endl;
+			cout << "topicAccuracy size: " << examResult.topicAccuracy.size() << endl;
+
+			for(const auto &entry : examResult.topicAccuracy)
+			{
+				const string &topicName = entry.first;
+				int accuracy = entry.second;
+				cout << "Topic: " << topicName << " Accuracy: " << accuracy << "%" << endl;
+				updateTopicResult(topicName.c_str(), dept, to_string(accuracy).c_str(), id);
+			}
+			sem_post(topicresultFileSemaphores[index]);
 			break;
 		}
 		case LEADERBOARD_CODE:
@@ -126,6 +151,14 @@ void *clientConnection(void *param)
 			getLeaderboard(newSocket,dept);
 			sem_post(readResultFile);
 			
+			break;
+		}
+		case TOPIC_LEADERBOARD_CODE:{
+			char dept[10];
+			recv(newSocket, &dept, sizeof(dept), 0);
+			sem_wait(topicreadResultFile);
+			getTopicLeaderboard(newSocket,dept);
+			sem_post(topicreadResultFile);
 			break;
 		}
 		case SEE_QUESTION_CODE:
@@ -160,18 +193,24 @@ int main()
 	//  binary semaphores with an initial value 1
 	char semaphoreName[16];
 	char resultSemaphoreName[25];
+	char topicSemaphoreName[30];
 	student_regFileSemaphore = sem_open(SEMAPHORE_NAME1, O_CREAT, 0660, 1);
 	teacher_regFileSemaphore = sem_open(SEMAPHORE_NAME2, O_CREAT, 0660, 1);
 	readFileSemaphore = sem_open(SEMAPHORE_NAME3, O_CREAT, 0660, 1);
 	readResultFile = sem_open(SEMAPHORE_NAME4, O_CREAT, 0660, 1);
+	topicreadResultFile = sem_open(SEMAPHORE_NAME5, O_CREAT, 0660, 1);
 	for (int i = 0; i < 4; i++)
 	{
 		sprintf(semaphoreName, "my_semaphore_%d", i);
 		sprintf(resultSemaphoreName,"result_semaphore_%d",i);
+		sprintf(topicSemaphoreName,"topic_semaphore_%d",i);
 		queFileSemaphores[i] = sem_open(semaphoreName, O_CREAT, 0660, 1);
 		resultFileSemaphores[i] = sem_open(resultSemaphoreName, O_CREAT, 0660, 1);
+		topicresultFileSemaphores[i] = sem_open(topicSemaphoreName, O_CREAT, 0660, 1);
+		if (topicresultFileSemaphores[i] == SEM_FAILED) {
+        	perror("sem_open failed");
+    	}
 	}
-
 	serverSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (serverSocket < 0)
 	{

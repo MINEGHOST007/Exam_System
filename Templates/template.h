@@ -14,7 +14,7 @@ using namespace std;
 #define student_register_menu "Enter the following\n 1) username \n 2) password \n 3) roll number \n 4) department (abbreviated)\n" 
 #define teacher_register_menu "Enter the following\n 1) username \n 2) password \n 3) teacher_id \n 4) department (abbreviated)\n"
 #define login_menu "Enter the following\n 1) Id \n 2) password\n"
-#define set_question_menu "Enter the following\n 1) Question\n 2) Option 1\n 3) Option 2\n 4) Option 3\n 5) Option 4\n 6) Correct Answer (a\\b\\c\\d)\n 7) Marks\n"
+#define set_question_menu "Enter the following\n 1) Question\n 2) Option 1\n 3) Option 2\n 4) Option 3\n 5) Option 4\n 6) Correct Answer (a\\b\\c\\d)\n 7) Marks\n 8) Topic\n"
 #define REGISTRATION_CODE 121
 #define LOGIN_CODE 122
 #define LOGIN_FAIL_CODE 123
@@ -25,9 +25,12 @@ using namespace std;
 #define END_OF_QUESTION_SETTING 128
 #define LEADERBOARD_CODE 129
 #define END_OF_LEADERBOARD_CODE 130
+
 #define SEE_QUESTION_CODE 131
 #define END_QUESTION_SEEING_CODE 132
 #define EMPTY_QUESTIONBANK_CODE 133
+#define TOPIC_LEADERBOARD_CODE 134
+#define END_TOPIC_LEADERBOARD_CODE 135
 #define END_CONNECTION_CODE 400
 #define SUCCESSFUL_CODE  200
 #define SERVER_ERROR_CODE 500
@@ -36,6 +39,7 @@ using namespace std;
 #define SEMAPHORE_NAME2 "/sem-mutex2"
 #define SEMAPHORE_NAME3 "/sem-mutex3"
 #define SEMAPHORE_NAME4 "/sem-mutex4"
+#define SEMAPHORE_NAME5 "/sem-mutex5"
 
 
 struct StudentUserInfo
@@ -76,6 +80,7 @@ struct QuestionInfo
     char opt4[100];
     char answer[5];
     char marks[10];
+    char tags[100];
 };
 
 struct StudentQuestion
@@ -92,6 +97,18 @@ struct leaderboardInfo
 {
     char id[100];
     char marks[10];
+};
+
+struct topicleaderboardInfo
+{
+    char id[100];
+    char topic_name[100];
+    char count[10];
+};
+
+struct ResultData {
+    int marksObtained;
+    std::map<std::string, int> topicAccuracy;
 };
 
 class User{
@@ -146,7 +163,7 @@ class Question
     public:
     Question();
     void insertQuestion(QuestionInfo *);
-    int startExam(int );
+    ResultData startExam(int );
     void sendQuestions(int newSocket);
     void shuffleQuestions();
 };
@@ -160,3 +177,5 @@ void setQuestion(int newSocket, string department, Question&);
 void updateResult(string id,string dept,int marksObtained);
 void getLeaderboard(int newSocket, string dept);
 void addQuestionFromFile(string dept,Question&);
+void updateTopicResult(string topic_name,string department, string accuracy, string id);
+void getTopicLeaderboard(int newSocket, string dept);
