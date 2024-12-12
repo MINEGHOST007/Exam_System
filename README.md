@@ -25,27 +25,30 @@ Start the server by executing:
 ./build/server
 ```
 
-### Running the Client (only for client)
+### Running the Client
 
-Before running the client, update the client's code to connect to the server's IP address. Replace `INADDR_ANY` with the server's IP address, which you can find using:
+For remote connections, before running the client, update the client's code to connect to the server's IP address. Replace `INADDR_ANY` with the server's IP address, which you can find using:
 
 ```bash
 ip addr show
 ```
-We have implemented semaphores and tried to avoid deadlocks and prefering reliability over response time.
 
-Then, start the client by executing:
+Alternatively, for local connections, you can directly run the client without modifying the code.
+
+Start the client by executing:
 
 ```bash
 ./build/client
 ```
+
+We have implemented semaphores to manage concurrency, aiming to avoid deadlocks and preferring reliability over response time.
 
 ## How to Execute the Exam System
 
 To run the exam system, execute:
 
 ```bash
-./exam_system
+./build/exam_system
 ```
 
 ## Contributing
@@ -56,4 +59,3 @@ Contributions are welcome! Please follow these steps:
 2. Create a new branch.
 3. Commit your changes.
 4. Open a pull request.
-
