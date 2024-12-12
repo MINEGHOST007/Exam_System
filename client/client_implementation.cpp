@@ -132,7 +132,7 @@ Client::Client()
     struct sockaddr_in server_address;
     server_address.sin_family = AF_INET;
     // inet_addr("192.168.1.100");
-    server_address.sin_addr.s_addr = INADDR_ANY;
+    server_address.sin_addr.s_addr = INADDR_ANY; // this can be changed for remote server but for local this is good enough
     server_address.sin_port = htons(PORT);
 
     // Initiate a socket connection
@@ -144,6 +144,10 @@ Client::Client()
         perror("Error\n");
         return;
     }
+    //rules
+    // a teacher can see any department question and a student can see only his department questions
+    // a teacher can see any department result and a student can see only his department result
+    // a teacher can set questions for his/her department and a student can take exam for his/her department only which is being regulated by ID so your id should contain your branch name abbreviation
 
     printf("Connection established\n");
 
