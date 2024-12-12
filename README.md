@@ -25,7 +25,7 @@ Start the server by executing:
 ./build/server
 ```
 
-### Running the Client
+### Running the Client (only for client)
 
 Before running the client, update the client's code to connect to the server's IP address. Replace `INADDR_ANY` with the server's IP address, which you can find using:
 
