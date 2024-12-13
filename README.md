@@ -43,14 +43,6 @@ Start the client by executing:
 
 We have implemented semaphores to manage concurrency, aiming to avoid deadlocks and preferring reliability over response time.
 
-## How to Execute the Exam System
-
-To run the exam system, execute:
-
-```bash
-./build/exam_system
-```
-
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
